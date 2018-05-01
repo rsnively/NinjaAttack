@@ -85,6 +85,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	var monsters: [MonsterNode] {
 		return self.children.compactMap{ $0 as? MonsterNode }
 	}
+	static let pointsPerMonsterHit = 6
+	var score: Int = 0
+	var health: Int {
+		return livingFarms.reduce(0, { $0 + $1.health })
+	}
 //  var health = 10
 //  var healthBarSize:CGSize { return CGSize(width: CGFloat(self.health * 20), height: 10.0) }
 //  lazy var healthBar = SKSpriteNode(color:UIColor.red, size:self.healthBarSize)
@@ -104,11 +109,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     backgroundMusic.autoplayLooped = true
     addChild(backgroundMusic)
 		
+		updateLabels()
+		
 //    healthBar.position = CGPoint(x: size.width * 0.5, y: size.height - healthBar.size.height)
 //    addChild(healthBar)
   }
   
   func addMonster() {
+		guard livingFarms.count > 0 else { return }
     let monster = MonsterNode(imageNamed: "monster")
     monster.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: monster.size.width * 0.5, height: monster.size.height * 0.8)) // 1
     monster.physicsBody?.isDynamic = true // 2
@@ -191,7 +199,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
     projectile.removeFromParent()
     monster.removeFromParent()
+		score += GameScene.pointsPerMonsterHit
+		updateLabels()
   }
+	
+	lazy var scoreLabel = SKLabelNode(text: "score")
+	lazy var healthLabel = SKLabelNode(text: "health")
+	func updateLabels() {
+		if scoreLabel.parent == nil {
+			addChild(scoreLabel)
+			scoreLabel.fontColor = UIColor.blue
+			scoreLabel.horizontalAlignmentMode = .left
+			scoreLabel.verticalAlignmentMode = .top
+			scoreLabel.position = CGPoint(x: self.size.width * 0.05, y: self.size.height * 0.95)
+		}
+		scoreLabel.text = String(format: "%d", self.score)
+		
+		if healthLabel.parent == nil {
+			addChild(healthLabel)
+			healthLabel.fontColor = UIColor.red
+			healthLabel.horizontalAlignmentMode = .right
+			healthLabel.verticalAlignmentMode = .top
+			healthLabel.position = CGPoint(x: self.size.width * 0.95, y: self.size.height * 0.95)
+		}
+		healthLabel.text = String(format: "%d", self.health)
+	}
   
   func monsterDidCollideWithFarm(monster:SKSpriteNode, farm:FarmNode) {
     farm.takeAHit()
@@ -199,6 +231,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		for monster in self.monsters {
 			monster.pickYourFarmAndGoThere(farms: self.livingFarms)
 		}
+		updateLabels()
   }
   
   func didBegin(_ contact: SKPhysicsContact) {

@@ -12,10 +12,7 @@ class MonsterNode: SKSpriteNode {
 		}
 		guard farms.count > 0 && !self.hasHitAFarm else { return }
 
-		if self.farm != nil {
-			print("breakpoint!")
-		}
-		farm = farms[Int(arc4random_uniform(UInt32(farms.count - 1)))]
+		farm = farms[Int(arc4random_uniform(UInt32(farms.count)))]
 		
 		self.removeAllActions()
 		let destination = farm!.position
