@@ -2,7 +2,7 @@ import Foundation
 import SpriteKit
 
 class FarmNode: SKNode {
-  static let startingHealth = 3
+  static let startingHealth = 10
   let farm = SKSpriteNode(imageNamed: "farm")
   var health = startingHealth {
     didSet {

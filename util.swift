@@ -1,4 +1,5 @@
 import Foundation
+import SpriteKit
 
 func random() -> CGFloat {
   return CGFloat(Float(arc4random()) / 0xFFFFFFFF)

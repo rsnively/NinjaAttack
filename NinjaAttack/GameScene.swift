@@ -76,6 +76,15 @@ struct PhysicsCategory {
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
   let player = SKSpriteNode(imageNamed: "player")
+	var farms: [FarmNode] {
+		return self.children.compactMap{ $0 as? FarmNode }
+	}
+	var livingFarms: [FarmNode] {
+		return self.farms.filter({ !$0.dead })
+	}
+	var monsters: [MonsterNode] {
+		return self.children.compactMap{ $0 as? MonsterNode }
+	}
 //  var health = 10
 //  var healthBarSize:CGSize { return CGSize(width: CGFloat(self.health * 20), height: 10.0) }
 //  lazy var healthBar = SKSpriteNode(color:UIColor.red, size:self.healthBarSize)
@@ -84,7 +93,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     backgroundColor = SKColor.lightGray
     physicsWorld.gravity = .zero
     physicsWorld.contactDelegate = self
-    
+		
+		giveBirthToFarms()
+
     player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
     addChild(player)
     giveBirthToMonsters()
@@ -92,9 +103,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
     backgroundMusic.autoplayLooped = true
     addChild(backgroundMusic)
-    
-    giveBirthToFarms()
-    
+		
 //    healthBar.position = CGPoint(x: size.width * 0.5, y: size.height - healthBar.size.height)
 //    addChild(healthBar)
   }
@@ -106,16 +115,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     monster.physicsBody?.categoryBitMask = PhysicsCategory.monster // 3
     monster.physicsBody?.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.farm
     monster.physicsBody?.collisionBitMask = PhysicsCategory.none // 5
-    
+		
     let x = size.width + monster.size.width/2
     let y = random(min: monster.size.height/2, max: size.height - monster.size.height/2)
     monster.position = CGPoint(x: x, y: y)
     addChild(monster)
+		
+		monster.pickYourFarmAndGoThere(farms: self.livingFarms)
     
-    let speed = random(min: CGFloat(2.0), max: CGFloat(10.0))
-    let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: y),
-                                   duration: TimeInterval(speed))
-    monster.runAndRemove(actionMove)
+//    let speed = random(min: CGFloat(2.0), max: CGFloat(10.0))
+//    let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: y),
+//                                   duration: TimeInterval(speed))
+//    monster.runAndRemove(actionMove)
 //    monster.runAndRemove(SKAction.sequence([actionMove, SKAction.run({ self.loseHealth(amount:1) })]))
   }
   
@@ -185,6 +196,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
   func monsterDidCollideWithFarm(monster:SKSpriteNode, farm:FarmNode) {
     farm.takeAHit()
     monster.physicsBody = nil
+		for monster in self.monsters {
+			monster.pickYourFarmAndGoThere(farms: self.livingFarms)
+		}
   }
   
   func didBegin(_ contact: SKPhysicsContact) {
